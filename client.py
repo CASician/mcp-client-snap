@@ -27,7 +27,7 @@ class MCPClient:
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
         self.api_key = os.getenv("GROQ_API_KEY")
-        self.model = "llama-3.1-8b-instant"
+        self.model = "meta-llama/llama-4-scout-17b-16e-instruct"
         self.openai = AsyncGroq(api_key=self.api_key, base_url="https://api.groq.com/")
 
     # methods will go here
