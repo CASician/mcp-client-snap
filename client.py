@@ -29,6 +29,7 @@ class MCPClient:
         self.api_key = os.getenv("GROQ_API_KEY")
         self.model = "meta-llama/llama-4-scout-17b-16e-instruct"
         self.openai = AsyncGroq(api_key=self.api_key, base_url="https://api.groq.com/")
+        self.messages = [{"role": "system", "content": ""}]
 
     # methods will go here
     async def connect_to_server(self, server_script_path: str):
@@ -65,9 +66,9 @@ class MCPClient:
         """
         Process a query using Groq and available tools
         """
-        messages = [
+        self.messages.append(
             {"role": "user", "content": query}
-        ]
+        )
         logger.info("USER QUERY: %s", query)
 
         response = await self.session.list_tools()
@@ -83,7 +84,7 @@ class MCPClient:
         # Initial Groq API call
         groq_resp = await self.openai.chat.completions.create(
             model = self.model,
-            messages = messages,
+            messages = self.messages,
             max_tokens = 500,
             functions = functions,
             function_call="auto"
@@ -115,9 +116,10 @@ class MCPClient:
 
             # Chiamo lo strumento
             tool_result = await self.session.call_tool(fn_name, args)
+            logger.info("RESULT: %s", tool_result)
 
             # Aggiungo il messaggio “function” alla cronologia
-            messages.append({
+            self.messages.append({
                 "role": "function",
                 "name": fn_name,
                 "content": str(tool_result.content or "")
@@ -125,7 +127,7 @@ class MCPClient:
 
             # Poi faccio una seconda chiamata a Groq, includendo il risultato
             followup = await self.openai.chat.completions.create(
-                messages=messages,
+                messages=self.messages,
                 model=self.model,
                 functions=functions,
                 function_call="none"
