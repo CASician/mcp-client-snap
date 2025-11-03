@@ -8,38 +8,40 @@ import logging
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from groq import AsyncGroq
-
+from lab_llm import LabLLM 
+from tool_schema_builder import build_system_tools
 from dotenv import load_dotenv
 load_dotenv()
 
 logging.basicConfig(
-    filename="llm_output.log",
+    filename="connecting_lab2mcp.log",
     level=logging.INFO,
     format="%(asctime)s %(message)s",
     encoding="utf-8",
 )
 logger = logging.getLogger(__name__)
 
+# Load the system message
+with open("system_message.txt", "r", encoding="utf-8") as f:
+    SYSTEM_MESSAGE = f.read()
+
 class MCPClient:
     def __init__(self):
-        # initialize session and client objects
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
-        self.model = "meta-llama/llama-4-scout-17b-16e-instruct"
-        self.openai = AsyncGroq(base_url="https://api.groq.com/")
-        self.messages = [{"role": "system", "content": ""}]
+        #self.openai = AsyncGroq(base_url="https://api.groq.com/")
+        self.lab_llm = LabLLM()
+        self.messages = []
 
     async def connect_to_server(self, server_script_path: str):
         """
         Connect to an MCP server
         """
         is_python = server_script_path.endswith('.py')
-        is_js = server_script_path.endswith('.js')
-        if not (is_python or is_js):
-            raise ValueError('Server script path must end with .py or .js')
+        if not is_python:
+            raise ValueError('Server script path must end with .py')
 
-        command = "python" if is_python else "node"
+        command = "python" 
         server_params = StdioServerParameters(
             command=command,
             args=[server_script_path],
@@ -53,17 +55,26 @@ class MCPClient:
         await self.session.initialize()
 
         # Fetch and store available tools, resources, and prompts
-        tools_resp = await self.session.list_tools()
-        self.tools = tools_resp.tools
+        try:
+            tools_resp = await self.session.list_tools()
+            self.tools = tools_resp.tools
+        except Exception:
+            self.tools = []
 
-        res_resp = await self.session.list_resources()
-        self.resources = res_resp.resources
+        try:
+            res_resp = await self.session.list_resources()
+            self.resources = res_resp.resources
+        except Exception:
+            self.resources = []
 
         try:
             prompt_resp = await self.session.list_prompts()
             self.prompts = prompt_resp.prompts
         except Exception:
             self.prompts = []
+
+        self.messages.append({"role": "system", "content": SYSTEM_MESSAGE + build_system_tools(self.tools)})
+        # TODO ADD LOGIC FOR RESOURCES AND PROMPTS HERE?
 
         print("\nConnected to server with tools:", [t.name for t in self.tools])
         print("Connected to server with resources:", [r.name for r in self.resources])
@@ -104,22 +115,21 @@ class MCPClient:
             })
 
         # Initial Groq call
-        groq_resp = await self.openai.chat.completions.create(
-            model=self.model,
+        raw_resp = self.lab_llm.chat_completion(
             messages=self.messages,
-            max_tokens=500,
             functions=functions,
-            function_call="auto"
+            function_call="auto",
         )
 
-        assistant_msg = groq_resp.choices[0].message
+        assistant_msg = raw_resp["choices"][0]["message"]
+        self.messages.append(assistant_msg)
         logger.info("RAW MODEL RESPONSE: %s", assistant_msg)
 
-        fn_call = getattr(assistant_msg, "function_call", None)
+        fn_call = assistant_msg.get("function_call")
 
         if fn_call:
-            fn_name = fn_call.name
-            fn_args = fn_call.arguments
+            fn_name = fn_call.get("name")
+            fn_args = fn_call.get("arguments", {})
             logger.info("FUNCTION CALLED: %s", fn_name)
             logger.info("ARGS: %s", fn_args)
 
@@ -156,26 +166,25 @@ class MCPClient:
             else:
                 result = await self.session.call_tool(fn_name, args)
                 result_content = result.content or ""
-            # ---------------- END ADDITION ------------------
+            # end of handling categories
 
             self.messages.append({
                 "role": "function",
                 "name": fn_name,
-                "content": str(result_content)
+                "content": str(result_content) + f"Show these results in natural language. State that nothing has been retrieved if that is the case."
             })
 
-            followup = await self.openai.chat.completions.create(
+            followup = self.lab_llm.chat_completion(
                 messages=self.messages,
-                model=self.model,
-                functions=functions,
-                function_call="none"
+                function_call="none",
             )
-
-            logger.info("FOLLOWUP RESPONSE: %s", followup.choices[0].message)
-            return followup.choices[0].message.content
-
+            
+            followup_msg = followup["choices"][0]["message"]
+            self.messages.append(followup_msg)
+            logger.info("FOLLOWUP RESPONSE: %s", followup_msg)
+            return followup_msg.get("content")
         else:
-            return assistant_msg.content or "I didn't use any tools."
+            return assistant_msg.get("content", "I didn't use any tools.")
 
     async def chat_loop(self):
         """
@@ -186,7 +195,7 @@ class MCPClient:
 
         while True:
             try:
-                query = input("\n Query: ").strip()
+                query = input("\n \033[92mQuery: \033[0m").strip()
 
                 if query.lower() == 'quit':
                     break

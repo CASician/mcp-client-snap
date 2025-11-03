@@ -1,3 +1,5 @@
 .env
-client
+venv
 .idea
+__pycache__
+user_credentials.json
