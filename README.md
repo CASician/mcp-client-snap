@@ -1,10 +1,8 @@
-
-# MCP Client (Groq + MCP Tools)
+# MCP Client 
 
 This repository contains an asynchronous **MCP client** that connects to an MCP-compatible server (Python) and integrates with **Llama model** to process user queries.  
 It automatically detects and uses tools provided by the server via MCP, allowing LLMs to call them dynamically.
 
----
 
 ## Features
 
@@ -12,9 +10,7 @@ It automatically detects and uses tools provided by the server via MCP, allowing
 - Lists and uses server-available tools dynamically
 - Supports function calling for tool execution
 - Maintains interactive chat loop
-- Logs all interactions to `llm_output.log`
-
----
+- Logs all interactions to `logs/llm_output.log`
 
 
 
@@ -26,7 +22,6 @@ If you read this from the VM, skip to nr. 3
 You need an MCP-compatible server. It will run in background. 
 See [mcp-server-snap](https://github.com/casician/mcp-server-snap.git) for more info.
 
----
 
 ### 2. Connect to DISIT LAB LLM. 
 Create a new file called `user_credentials.json`. 
@@ -40,7 +35,6 @@ It is Used by the client to authenticate to Snap4City and obtain an access token
 }
 ```
 
----
 
 ### 3. Run the Client
 
@@ -56,10 +50,8 @@ Connected to server with:
 TOOLS: [...]
 RESOURCES: [...]
 PROMTPS: [...]
-
 ```
 
----
 
 ### 3. Start Chatting
 
@@ -75,14 +67,13 @@ Query: list all the available tpl agencies and their websites.
 If the model decides to use a tool, you’ll see it in the log and terminal output.
 Otherwise, the model will answer directly.
 
----
 
 ## 🧾 Logging
 
 All queries, raw model responses, and tool calls are saved in:
 
 ```
-llm_output.log
+log/llm_output.log
 ```
 
 Example excerpt:
@@ -95,13 +86,11 @@ Example excerpt:
 2025-10-02 09:23:20 FOLLOWUP RESPONSE: The area is approximately 78.54.
 ```
 
----
 
 ## Cleanup
 
 When exiting (typing `quit`), the client automatically closes all asynchronous resources.
 
----
 
 ## ️ Troubleshooting
 
@@ -114,7 +103,6 @@ When exiting (typing `quit`), the client automatically closes all asynchronous r
 * **Connection to DISIT resources**
   → Make sure that the credentials are valid and passed correctly as in `How to use: 2. ` 
 
----
 
 ## Notes
 
@@ -127,9 +115,6 @@ When exiting (typing `quit`), the client automatically closes all asynchronous r
 
 * Tool calls follow the OpenAI-style `function_call` format, so the client should work with any LLM that supports it.
 
----
 
-## License
 
-MIT License © 2025
 
