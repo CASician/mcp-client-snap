@@ -24,7 +24,7 @@ See [mcp-server-snap](https://github.com/casician/mcp-server-snap.git) for more 
 
 
 ### 2. Connect to DISIT LAB LLM. 
-Create a new file called `user_credentials.json`. 
+In the directory `llama4` create a new file called `user_credentials.json`.
 
 It is Used by the client to authenticate to Snap4City and obtain an access token. You must use a Snap4City account that has been granted with the necessary API rules and usage limits.
 
@@ -95,7 +95,7 @@ When exiting (typing `quit`), the client automatically closes all asynchronous r
 ## ️ Troubleshooting
 
 * **Error: "Usage: python client.py <path_to_server_script>"**
-  → You didn't pass the path to the MCP server file.
+  → You didn't pass the path to the MCP server file. Check in `chat.sh` if the path is valid. 
 
 * **Virtual environment issues**
   → Make sure the correct Python interpreter is active.
