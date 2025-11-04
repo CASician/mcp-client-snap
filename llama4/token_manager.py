@@ -5,7 +5,7 @@ import os
 
 
 class TokenManager:
-    def __init__(self, username, password, client_id="clearml-apis", store_path="token_stored.json"):
+    def __init__(self, username, password, client_id="clearml-apis", store_path="llama4/token_stored.json"):
         self.username = username
         self.password = password
         self.client_id = client_id

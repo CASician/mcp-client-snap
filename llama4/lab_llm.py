@@ -1,7 +1,7 @@
 import json
 import requests
 import logging
-from token_manager import TokenManager
+from llama4.token_manager import TokenManager
 
 # TODO add loggin logic throghout the file
 logger = logging.getLogger(__name__)
@@ -34,14 +34,14 @@ class LabLLM:
 
     def _login(self):
         creds = load_json(
-            "user_credentials.json",
+            "llama4/user_credentials.json",
             required_keys=["username", "password"]  
         )
         self.username = creds["username"]
         self.password = creds["password"]
         # == Load ClearML config ==
         cfg = load_json(
-            "clearml_config.json",
+            "llama4/clearml_config.json",
             required_keys=["clearml_ondemand_api_base_url", "clearml_llm_endpoint"]
         )
         self.api_base_url = cfg["clearml_ondemand_api_base_url"]
@@ -55,6 +55,7 @@ class LabLLM:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.access_token}",
         }
+
     def chat_completion(self, messages, functions=None, function_call="auto", max_tokens=500):
         prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
 
@@ -134,3 +135,4 @@ class LabLLM:
             message = {"role": "assistant", "content": answer}
             
         return {"choices": [{"message": message}]}
+

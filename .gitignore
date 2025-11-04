@@ -2,5 +2,5 @@
 venv
 .idea
 __pycache__
-user_credentials.json
-token_stored.json
+llama4/user_credentials.json
+llama4/token_stored.json

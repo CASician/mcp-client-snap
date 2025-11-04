@@ -8,10 +8,8 @@ import logging
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from lab_llm import LabLLM 
+from llama4.lab_llm import LabLLM 
 from tool_schema_builder import build_system_tools
-from dotenv import load_dotenv
-load_dotenv()
 
 logging.basicConfig(
     filename="logs/llm_output.log",
