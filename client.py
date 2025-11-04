@@ -126,17 +126,16 @@ class MCPClient:
             function_call="auto",
         )
 
-        assistant_msg = raw_resp["choices"][0]["message"]
-        self.messages.append(assistant_msg)
-        logger.info("RAW MODEL RESPONSE: %s", assistant_msg)
+        first_msg = raw_resp["choices"][0]["message"]
+        self.messages.append(first_msg)
+        logger.info("FIRST RESPONSE: %s", json.dumps(first_msg, indent=4))
 
-        fn_call = assistant_msg.get("function_call")
+        fn_call = first_msg.get("function_call")
 
         if fn_call:
             fn_name = fn_call.get("name")
             fn_args = fn_call.get("arguments", {})
             logger.info("FUNCTION CALLED: %s", fn_name)
-            logger.info("ARGS: %s", fn_args)
 
             if isinstance(fn_args, str):
                 try:
@@ -186,10 +185,10 @@ class MCPClient:
             
             followup_msg = followup["choices"][0]["message"]
             self.messages.append(followup_msg)
-            logger.info("FOLLOWUP RESPONSE: %s", followup_msg)
+            logger.info("FOLLOWUP RESPONSE: %s", json.dumps(followup_msg, indent=4))
             return followup_msg.get("content")
         else:
-            return assistant_msg.get("content", "I didn't use any tools.")
+            return first_msg.get("content", "I didn't use any tools.")
 
     async def chat_loop(self):
         """
@@ -210,6 +209,7 @@ class MCPClient:
 
             except Exception as e:
                 print(f"\n Error: {str(e)}")
+                print(traceback.format_exc())
 
     async def cleanup(self):
         await self.exit_stack.aclose()

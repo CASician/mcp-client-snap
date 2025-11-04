@@ -2,6 +2,7 @@ import json
 import requests
 import logging
 from llama4.token_manager import TokenManager
+import re
 
 # TODO add loggin logic throghout the file
 logger = logging.getLogger(__name__)
@@ -20,6 +21,16 @@ def load_json(path, required_keys):
     if missing:
         raise KeyError(f"Missing keys in '{path}': {missing}")
     return data
+
+JSON_START_PATTERN = r'\{\s*\\?["\']function_call["\']\s*:\s*'
+
+
+def find_start_regex(text):
+    match = re.search(JSON_START_PATTERN, text)
+    if match:
+        # Return the index of the first character of the match ('{')
+        return match.start()
+    return -1
 
 class LabLLM:
     def __init__(self):
@@ -77,7 +88,11 @@ class LabLLM:
             raise Exception(f"LabLLM error: {response.status_code}")
 
         data = response.json()
+        # De-comment next line to see the WHOLE conversation
+        # logger.info("RESPONSE FROM LAB: %s", response.text)
         answer = data.get("answer", "")
+        # This one is the MODEL REASONING + FUNCTION CALL. It is separated below.
+        # logger.info("RES FROM LAB BUT ONLY answer: %s", answer)
         
         # --- Custom Parsing and Message Structuring ---
         
@@ -88,7 +103,7 @@ class LabLLM:
         if function_call != "none":
             
             # Priority Check: Look for combined (Text + JSON) response
-            json_start = answer.find('{"function_call":')
+            json_start = find_start_regex(answer) 
             
             if json_start != -1:
                 json_string = answer[json_start:].strip()
@@ -99,9 +114,11 @@ class LabLLM:
                     if isinstance(parsed_json, dict) and "function_call" in parsed_json:
                         parsed_function_call = parsed_json["function_call"]
                         reasoning_text = answer[:json_start].strip()
+                        logger.info("PARSE 1: Separate REASONING from FUNCTION CALL")
 
                 except (json.JSONDecodeError, TypeError):
                     # Fall through to the next check if parsing combined JSON fails
+                    logger.info("PARSE 1 FAIL: Separate REASONING from FUNCTION CALL")
                     pass
 
             # Secondary Check: If no call was found yet, check for Pure JSON response
@@ -111,13 +128,13 @@ class LabLLM:
                     
                     if isinstance(parsed_pure, dict) and "function_call" in parsed_pure:
                         parsed_function_call = parsed_pure["function_call"]
+                        logger.info("PARSE 2: llm invoked correctly a function")
 
                 except (json.JSONDecodeError, TypeError):
                     # No valid JSON found, treat everything as plain text.
+                    logger.info("PARSE 2 FAIL: llm DID NOT invoke correctly a function")
                     pass
                 
-        # --- 2. Build the final message object based on parsing result ---
-        
         if parsed_function_call:
             # Struttura richiesta per la tool call
             message = {
@@ -128,7 +145,7 @@ class LabLLM:
             
             # Log the text reasoning if it was found, but keep the structure clean.
             if reasoning_text:
-                logger.info("MODEL REASONING (TEXT BEFORE JSON): %s", reasoning_text)
+                logger.info("MODEL REASONING: %s", reasoning_text)
                 
         else:
             # Struttura richiesta per la risposta testuale
