@@ -49,11 +49,11 @@ If successful, you’ll see the token-handling and an output like:
 Connected to server with:
 TOOLS: [...]
 RESOURCES: [...]
-PROMTPS: [...]
+PROMPTS: [...]
 ```
 
 
-### 3. Start Chatting
+### 4. Start Chatting
 
 Once connected, you can enter queries interactively:
 
@@ -68,7 +68,7 @@ If the model decides to use a tool, you’ll see it in the log and terminal outp
 Otherwise, the model will answer directly.
 
 
-## 🧾 Logging
+##  Logging
 
 All queries, raw model responses, and tool calls are saved in:
 
@@ -80,7 +80,7 @@ Example excerpt:
 
 ```
 2025-10-02 09:23:17 USER QUERY: calculate the area of a circle with radius 5
-2025-10-02 09:23:19 RAW MODEL RESPONSE: {'role': 'assistant', 'content': None, 'function_call'    : {'name': 'tool_name', 'arguments': {...} } }
+2025-10-02 09:23:19 RAW MODEL RESPONSE: {'role': 'assistant', 'content': None, 'function_call': {'name': 'tool_name', 'arguments': {...}}}
 2025-10-02 09:23:19 FUNCTION CALLED: math_tool
 2025-10-02 09:23:19 ARGS: {"operation": "area_circle", "radius": 5}
 2025-10-02 09:23:20 FOLLOWUP RESPONSE: The area is approximately 78.54.
