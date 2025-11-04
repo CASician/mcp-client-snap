@@ -7,7 +7,7 @@ from token_manager import TokenManager
 logger = logging.getLogger(__name__)
 
 logging.basicConfig(
-    filename="connecting_lab2mcp.log",
+    filename="logs/llm_output.log",
     level=logging.INFO,
     format="%(asctime)s %(message)s",
     encoding="utf-8",
@@ -56,7 +56,6 @@ class LabLLM:
             "Authorization": f"Bearer {self.access_token}",
         }
     def chat_completion(self, messages, functions=None, function_call="auto", max_tokens=500):
-        # Convert OpenAI-like messages into a single prompt for the custom Lab API
         prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
 
         body = {
@@ -64,7 +63,6 @@ class LabLLM:
             "endpoint": self.endpoint,
             "params": {"prompt": prompt}
         }
-        # logger.info("BODY: %s", body["params"])
 
         # Calls the custom API
         response = requests.post(

@@ -3,3 +3,4 @@ venv
 .idea
 __pycache__
 user_credentials.json
+token_stored.json

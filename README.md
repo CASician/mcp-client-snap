@@ -1,16 +1,15 @@
 
 # MCP Client (Groq + MCP Tools)
 
-This repository contains an asynchronous **MCP client** that connects to an MCP-compatible server (Python or Node.js) and integrates with **Groq’s Llama model** to process user queries.  
+This repository contains an asynchronous **MCP client** that connects to an MCP-compatible server (Python) and integrates with **Llama model** to process user queries.  
 It automatically detects and uses tools provided by the server via MCP, allowing LLMs to call them dynamically.
 
 ---
 
 ## Features
 
-- Connects to any MCP-compliant server (`.py` or `.js`)
+- Connects to any MCP-compliant server (`.py`) 
 - Lists and uses server-available tools dynamically
-- Integrates with [Groq API](https://console.groq.com)
 - Supports function calling for tool execution
 - Maintains interactive chat loop
 - Logs all interactions to `llm_output.log`
@@ -20,27 +19,44 @@ It automatically detects and uses tools provided by the server via MCP, allowing
 
 
 ##  How to use
+If you read this from the VM, skip to nr. 3
 
 ### 1. Prepare a Server
 
-You need an MCP-compatible server.
-See casician/mcp-server-snap
-```bash
-python server.py
+You need an MCP-compatible server. It will run in background. 
+See [mcp-server-snap](https://github.com/casician/mcp-server-snap.git) for more info.
+
+---
+
+### 2. Connect to DISIT LAB LLM. 
+Create a new file called `user_credentials.json`. 
+
+It is Used by the client to authenticate to Snap4City and obtain an access token. You must use a Snap4City account that has been granted with the necessary API rules and usage limits.
+
+```json
+{
+  "username": "<SNAP4CITY_USERNAME>",
+  "password": "<PASSWORD>"
+}
 ```
 
 ---
 
-### 2. Run the Client
+### 3. Run the Client
 
 ```bash
-python client.py <path_to_server_script>
+chat
 ```
+This is an alias for `./chat.sh` command.
 
-If successful, you’ll see output like:
+If successful, you’ll see the token-handling and an output like:
 
 ```
-Connected to server with tools: ['get_agencies', 'get_bus_lines', ...]
+Connected to server with:
+TOOLS: [...]
+RESOURCES: [...]
+PROMTPS: [...]
+
 ```
 
 ---
@@ -73,6 +89,7 @@ Example excerpt:
 
 ```
 2025-10-02 09:23:17 USER QUERY: calculate the area of a circle with radius 5
+2025-10-02 09:23:19 RAW MODEL RESPONSE: {'role': 'assistant', 'content': None, 'function_call'    : {'name': 'tool_name', 'arguments': {...} } }
 2025-10-02 09:23:19 FUNCTION CALLED: math_tool
 2025-10-02 09:23:19 ARGS: {"operation": "area_circle", "radius": 5}
 2025-10-02 09:23:20 FOLLOWUP RESPONSE: The area is approximately 78.54.
@@ -89,16 +106,13 @@ When exiting (typing `quit`), the client automatically closes all asynchronous r
 ## ️ Troubleshooting
 
 * **Error: "Usage: python client.py <path_to_server_script>"**
-  → You forgot to pass the path to the MCP server file.
-
-* **Error: “Server script path must end with .py or .js”**
-  → The server file must be a valid Python or Node.js script.
-
-* **Model or API issues**
-  → Check that your `.env` file contains a valid `GROQ_API_KEY`.
+  → You didn't pass the path to the MCP server file.
 
 * **Virtual environment issues**
   → Make sure the correct Python interpreter is active.
+
+* **Connection to DISIT resources**
+  → Make sure that the credentials are valid and passed correctly as in `How to use: 2. ` 
 
 ---
 
@@ -107,10 +121,9 @@ When exiting (typing `quit`), the client automatically closes all asynchronous r
 * The model used is:
 
   ```
-  meta-llama/llama-4-scout-17b-16e-instruct
+  llama-4-inference
   ```
 
-  You can change it by editing the `self.model` field in `MCPClient`.
 
 * Tool calls follow the OpenAI-style `function_call` format, so the client should work with any LLM that supports it.
 

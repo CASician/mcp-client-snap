@@ -14,12 +14,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logging.basicConfig(
-    filename="connecting_lab2mcp.log",
+    filename="logs/llm_output.log",
     level=logging.INFO,
     format="%(asctime)s %(message)s",
     encoding="utf-8",
 )
 logger = logging.getLogger(__name__)
+
+# COLORS FOR BASH
+RED = '\033[91m'
+GREEN = '\033[92m'
+BLUE = '\033[94m'
+NC = '\033[0m'
 
 # Load the system message
 with open("system_message.txt", "r", encoding="utf-8") as f:
@@ -76,9 +82,10 @@ class MCPClient:
         self.messages.append({"role": "system", "content": SYSTEM_MESSAGE + build_system_tools(self.tools)})
         # TODO ADD LOGIC FOR RESOURCES AND PROMPTS HERE?
 
-        print("\nConnected to server with tools:", [t.name for t in self.tools])
-        print("Connected to server with resources:", [r.name for r in self.resources])
-        print("Connected to server with prompts:", [p.name for p in self.prompts])
+        print(f"\n{BLUE}Connected to server with: {NC}")
+        print(f"\n{BLUE}TOOLS: {NC}\n", [t.name for t in self.tools])
+        print(f"\n{BLUE}RESOURCES: {NC}\n", [r.name for r in self.resources])
+        print(f"\n{BLUE}PROMPTS: {NC}\n", [p.name for p in self.prompts])
 
     async def process_query(self, query: str) -> str:
         """
@@ -190,12 +197,12 @@ class MCPClient:
         """
         Run an interactive chat loop
         """
-        print("\n MCP Client Started!")
+        print(f"\n{RED}MCP Client Started!{NC}")
         print("Type your queries or 'quit' to exit.")
 
         while True:
             try:
-                query = input("\n \033[92mQuery: \033[0m").strip()
+                query = input(f"\n {GREEN}Query: {NC}").strip()
 
                 if query.lower() == 'quit':
                     break
