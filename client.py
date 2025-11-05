@@ -89,7 +89,8 @@ class MCPClient:
             self.prompts = []
 
         # ========== SYSTEM MESSAGE + TOOL DEFINITION ==========
-        self.messages.append({"role": "system", "content": SYSTEM_MESSAGE + build_system_tools(self.tools)})
+        self.messages.append({"role": "system", "content": SYSTEM_MESSAGE + build_system_tools(self.tools, "TOOL") + build_system_tools(self.resources, "RESOURCE") })
+        print(self.messages)
         # TODO ADD LOGIC FOR RESOURCES AND PROMPTS HERE?
 
         # ========== BASH LOGS ==========   
@@ -135,33 +136,32 @@ class MCPClient:
         logger.info("USER QUERY: %s", query)
 
         # ========== Merge tools, resources, and prompts into a single callable schema ==========
-        # TODO this is not the right place to do it in our structure. Even though it's standard to pass the functions at every llm call. 
-        # TODO remove extra layer for resources and prompts. 
-        functions = []
+        # this is not the right place to do it in our structure. Even though it's standard to pass the functions at every llm call. 
+        # functions = []
 
-        # Tools as functions
-        for tool in self.tools:
-            functions.append({
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": tool.inputSchema
-            })
+        # # Tools as functions
+        # for tool in self.tools:
+        #     functions.append({
+        #         "name": tool.name,
+        #         "description": tool.description,
+        #         "parameters": tool.inputSchema
+        #     })
 
-        # Resources as "get_resource" functions
-        for resource in self.resources:
-            functions.append({
-                "name": f"get_resource_{resource.name}",
-                "description": f"Access resource: {resource.name}. {resource.description}",
-                "parameters": {"type": "object", "properties": {}}
-            })
+        # # Resources as "get_resource" functions
+        # for resource in self.resources:
+        #     functions.append({
+        #         "name": f"get_resource_{resource.name}",
+        #         "description": f"Access resource: {resource.name}. {resource.description}",
+        #         "parameters": {"type": "object", "properties": {}}
+        #     })
 
-        # Prompts as "use_prompt" functions
-        for prompt in self.prompts:
-            functions.append({
-                "name": f"use_prompt_{prompt.name}",
-                "description": f"Use predefined prompt: {prompt.name}. {prompt.description}",
-                "parameters": {"type": "object", "properties": {}}
-            })
+        # # Prompts as "use_prompt" functions. But to call a prompt example is not very useful. 
+        # for prompt in self.prompts:
+        #     functions.append({
+        #         "name": f"use_prompt_{prompt.name}",
+        #         "description": f"Use predefined prompt: {prompt.name}. {prompt.description}",
+        #         "parameters": {"type": "object", "properties": {}}
+        #     })
 
         # ========== INITIAL LLM CALL ========== 
         raw_resp = self.lab_llm.chat_completion(

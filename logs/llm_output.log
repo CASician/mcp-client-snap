@@ -827,3 +827,32 @@ To get from "Ingegneria" (http://www.disit.org/km4city/resource/1859902278) to "
 2025-11-05 19:45:07,722 Processing request of type ListPromptsRequest
 2025-11-05 19:45:07,724 -------- NEW CONVERSATION --------
 2025-11-05 19:45:35,052 USER QUERY: can you find what bus lines are there in Firenze?
+2025-11-05 22:39:20,415 Processing request of type ListToolsRequest
+2025-11-05 22:39:20,422 Processing request of type ListResourcesRequest
+2025-11-05 22:39:20,424 Processing request of type ListPromptsRequest
+2025-11-05 22:39:20,426 -------- NEW CONVERSATION --------
+2025-11-05 22:39:22,178 USER QUERY: hi
+2025-11-05 22:49:20,395 Processing request of type ListToolsRequest
+2025-11-05 22:49:20,407 Processing request of type ListResourcesRequest
+2025-11-05 22:49:20,416 Processing request of type ListPromptsRequest
+2025-11-05 22:49:20,423 -------- NEW CONVERSATION --------
+2025-11-05 22:58:11,564 Processing request of type ListToolsRequest
+2025-11-05 22:58:11,570 Processing request of type ListResourcesRequest
+2025-11-05 22:58:11,573 Processing request of type ListPromptsRequest
+2025-11-05 22:58:11,576 -------- NEW CONVERSATION --------
+2025-11-05 23:03:19,146 Processing request of type ListToolsRequest
+2025-11-05 23:03:19,159 Processing request of type ListResourcesRequest
+2025-11-05 23:03:19,164 Processing request of type ListPromptsRequest
+2025-11-05 23:03:19,171 -------- NEW CONVERSATION --------
+2025-11-05 23:04:29,917 Processing request of type ListToolsRequest
+2025-11-05 23:04:29,923 Processing request of type ListResourcesRequest
+2025-11-05 23:04:29,926 Processing request of type ListPromptsRequest
+2025-11-05 23:04:29,929 -------- NEW CONVERSATION --------
+2025-11-05 23:37:43,726 Processing request of type ListToolsRequest
+2025-11-05 23:37:43,732 Processing request of type ListResourcesRequest
+2025-11-05 23:37:43,735 Processing request of type ListPromptsRequest
+2025-11-05 23:37:43,738 -------- NEW CONVERSATION --------
+2025-11-05 23:40:54,280 Processing request of type ListToolsRequest
+2025-11-05 23:40:54,322 Processing request of type ListResourcesRequest
+2025-11-05 23:40:54,325 Processing request of type ListPromptsRequest
+2025-11-05 23:40:54,328 -------- NEW CONVERSATION --------
