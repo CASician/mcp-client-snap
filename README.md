@@ -36,7 +36,7 @@ It is Used by the client to authenticate to Snap4City and obtain an access token
 ```
 
 
-### 3. Run the Client
+### 3. Run the Client (ONLY from the VM)
 
 ```bash
 chat
@@ -52,6 +52,30 @@ RESOURCES: [...]
 PROMPTS: [...]
 ```
 
+### 3.1 Run the Client (outside users)
+
+If you have the server folder and the client folder at the same level:
+```bash
+python client.py ../mcp-server-snap/server.py
+```
+Adapt the `server.py` path to your dir structure. 
+
+If you receive errors saying that the server is not running:
+1. Open a new terminal
+2. Go to server directory and turn it on with:
+
+```
+python server.py
+```
+
+If successful, you’ll see the token-handling and an output like:
+
+```
+Connected to server with:
+TOOLS: [...]
+RESOURCES: [...]
+PROMPTS: [...]
+```
 
 ### 4. Start Chatting
 
