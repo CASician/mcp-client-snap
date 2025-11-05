@@ -68,6 +68,7 @@ class LabLLM:
         }
 
     def chat_completion(self, messages, functions=None, function_call="auto", max_tokens=500):
+        # Perché non gli passo direttamente i messages? Avrebbero già la giusta forma. 
         prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
 
         body = {

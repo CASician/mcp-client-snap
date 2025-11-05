@@ -1,6 +1,5 @@
 import asyncio
 import json
-import os
 import sys
 from typing import Optional
 from contextlib import AsyncExitStack
@@ -11,6 +10,7 @@ from mcp.client.stdio import stdio_client
 from llama4.lab_llm import LabLLM 
 from tool_schema_builder import build_system_tools
 
+# ========== LOGGING TO BE FOUND IN /logs/ ==========
 logging.basicConfig(
     filename="logs/llm_output.log",
     level=logging.INFO,
@@ -19,18 +19,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# COLORS FOR BASH
+# ========== COLORS FOR BASH ========== 
 RED = '\033[91m'
 GREEN = '\033[92m'
 BLUE = '\033[94m'
 NC = '\033[0m'
 
-# Load the system message
+# ========== Load the system message ========== 
 with open("system_message.txt", "r", encoding="utf-8") as f:
     SYSTEM_MESSAGE = f.read()
 
 class MCPClient:
     def __init__(self):
+        """
+        - session and exit_stack are needed for the server.
+        - openai and lab_llm are the connection to a LLM. Uncomment the one you need to use. 
+            [TODO: make the code s.t. with this small change, it works with both. For now, it won't work.]
+        - messages: the array of messages that will contain SYSTEM_MESSAGE, SERVER DESCRIPTION and the chat between ASSISTANT and USER.
+        """ 
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
         #self.openai = AsyncGroq(base_url="https://api.groq.com/")
@@ -39,8 +45,12 @@ class MCPClient:
 
     async def connect_to_server(self, server_script_path: str):
         """
-        Connect to an MCP server
+        Connect to an MCP server.  
+        - start the server given the correct path
+        - fetch primitives (tools, resources, prompts) 
+        - show primitives to user
         """
+        # ========== START SERVER ==========   
         is_python = server_script_path.endswith('.py')
         if not is_python:
             raise ValueError('Server script path must end with .py')
@@ -58,7 +68,7 @@ class MCPClient:
 
         await self.session.initialize()
 
-        # Fetch and store available tools, resources, and prompts
+        # ========== Fetch and store available tools, resources, and prompts ========== 
         try:
             tools_resp = await self.session.list_tools()
             self.tools = tools_resp.tools
@@ -80,6 +90,7 @@ class MCPClient:
         self.messages.append({"role": "system", "content": SYSTEM_MESSAGE + build_system_tools(self.tools)})
         # TODO ADD LOGIC FOR RESOURCES AND PROMPTS HERE?
 
+        # ========== BASH LOGS ==========   
         print(f"\n{BLUE}Connected to server with: {NC}")
         print(f"\n{BLUE}TOOLS: {NC}\n", [t.name for t in self.tools])
         print(f"\n{BLUE}RESOURCES: {NC}\n", [r.name for r in self.resources])
@@ -87,12 +98,43 @@ class MCPClient:
 
     async def process_query(self, query: str) -> str:
         """
-        Process a query using Groq and available tools/resources/prompts
+        Process a query using LLM and available tools/resources/prompts. 
+        Workflow:
+        1. Append the user query in messages. 
+        2. Call the LLM with user's query.
+        3. Check if the answer has "function_call"
+            4a. NO FUNCTION CALL: return answer (and append it to messages)
+        4. FUNCTION CALL DETECTED: parse the answer to reconstruct function.
+        5. Ask server to call the function. 
+        6. Append result in messages. 
+        7. Call the LLM again, to process the answer in natural language 
+        8. Append second answer to messages and return it. 
+  
+
+        The LLM returns a json object like this:
+        { 
+            "choices": [
+                "message": {
+                    "role": "assistant",
+                    "content": "THE ANSWER" # if there is a function call, this is `null`
+                    "function_call": {
+                        "name": "function_name"
+                        "arguments": { ... } 
+                    }
+                }
+            ]    
+        }
+
+        This structure mimics what is the standard OpenAI structure. But it needs improvements. 
         """
+
+        # ========== APPEND USER QUERY IN MESSAGES AND LOG IT ==========
         self.messages.append({"role": "user", "content": query})
         logger.info("USER QUERY: %s", query)
 
-        # Merge tools, resources, and prompts into a single callable schema
+        # ========== Merge tools, resources, and prompts into a single callable schema ==========
+        # TODO this is not the right place to do it in our structure. Even though it's standard to pass the functions at every llm call. 
+        # TODO remove extra layer for resources and prompts. 
         functions = []
 
         # Tools as functions
@@ -119,20 +161,25 @@ class MCPClient:
                 "parameters": {"type": "object", "properties": {}}
             })
 
-        # Initial Groq call
+        # ========== INITIAL LLM CALL ========== 
         raw_resp = self.lab_llm.chat_completion(
             messages=self.messages,
             functions=functions,
-            function_call="auto",
+            function_call="auto", # "auto" or "none". With "none", no function is called. 
         )
 
+        # This section adds the llm answer to the messages array and logs it.
+        # ["choices"][0]["message"] imitates openai library that would do .choices[0].message
         first_msg = raw_resp["choices"][0]["message"]
         self.messages.append(first_msg)
         logger.info("FIRST RESPONSE: %s", json.dumps(first_msg, indent=4))
 
+        # ========== FUNCTION CALLING ==========  
         fn_call = first_msg.get("function_call")
 
+        # If a function call is found, proceeds to extrapolate the data and then it calls it.  
         if fn_call:
+            # ========== FUNCTION DETAILS ========== 
             fn_name = fn_call.get("name")
             fn_args = fn_call.get("arguments", {})
             logger.info("FUNCTION CALLED: %s", fn_name)
@@ -147,7 +194,8 @@ class MCPClient:
             else:
                 args = {}
 
-            # Handle 3 possible categories: tool / resource / prompt
+            # ========== ACTUAL FUNCTION CALL ==========    
+            # Handle 3 possible categories: tool / resource / prompt 
             result_content = None
 
             if fn_name.startswith("get_resource_"):
@@ -170,36 +218,42 @@ class MCPClient:
             else:
                 result = await self.session.call_tool(fn_name, args)
                 result_content = result.content or ""
-            # end of handling categories
 
+            # ========== ADD RESULT TO MESSAGES ==========
             self.messages.append({
                 "role": "function",
                 "name": fn_name,
                 "content": str(result_content) + f"Show these results in natural language. State that nothing has been retrieved if that is the case."
             })
 
+            # ========== FOLLOWUP LLM CALL FOR RESULT PROCESSING AND FINAL ANSWER ========== 
             followup = self.lab_llm.chat_completion(
                 messages=self.messages,
-                function_call="none",
+                function_call="none", # "auto" or "none", With "none", no function is called. 
             )
             
+            # Append the followup in messages and log it. 
+            # ["choices"][0]["messages"] in openai library is called as followup.choices[0].message
             followup_msg = followup["choices"][0]["message"]
             self.messages.append(followup_msg)
             logger.info("FOLLOWUP RESPONSE: %s", json.dumps(followup_msg, indent=4))
+
+            # ========== RETURN ONLY THE FINAL MESSAGE TO THE CHAT INTERFACE ==========
             return followup_msg.get("content")
         else:
+            # ========== IF NO FUNCTION_CALL RETURN THE FIRST ANSWER ==========
             return first_msg.get("content", "I didn't use any tools.")
 
     async def chat_loop(self):
         """
-        Run an interactive chat loop
+        Run an interactive chat loop. Type 'quit' to exit. The user will have a chat-like cli interface. You can type the query when ">>>Query:" is shown. 
         """
         print(f"\n{RED}MCP Client Started!{NC}")
         print("Type your queries or 'quit' to exit.")
 
         while True:
             try:
-                query = input(f"\n {GREEN}Query: {NC}").strip()
+                query = input(f"\n {GREEN}>>>Query: {NC}").strip()
 
                 if query.lower() == 'quit':
                     break
@@ -215,6 +269,7 @@ class MCPClient:
         await self.exit_stack.aclose()
 
 async def main():
+    # This file needs the path to the server.py file to run.
     if len(sys.argv) < 2:
         print("Usage: python client.py <path_to_server_script>")
         sys.exit(1)
