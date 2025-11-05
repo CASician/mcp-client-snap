@@ -99,6 +99,7 @@ class LabLLM:
             - a/b/c should not be needed if LLM listened to instructions. But eh. 
         5. Return message: a JSON object with proper function_call (openai style) if found. 
         
+        Note: the arg `functions` does nothing. In OpenAI style, the tools are passed to the llm with every call. I find that redundant. Once with the SYSTEM_MESSAGE is enough. Look inside the client code where the server is initialized. 
         """
         body = {
             "access_token": self.access_token,

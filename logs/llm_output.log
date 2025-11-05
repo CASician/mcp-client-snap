@@ -822,3 +822,8 @@ To get from "Ingegneria" (http://www.disit.org/km4city/resource/1859902278) to "
 2025-11-05 16:44:09,042 USER QUERY: hi
 2025-11-05 16:45:25,712 -------- NEW CONVERSATION --------
 2025-11-05 16:45:26,882 USER QUERY: hi
+2025-11-05 19:45:07,713 Processing request of type ListToolsRequest
+2025-11-05 19:45:07,720 Processing request of type ListResourcesRequest
+2025-11-05 19:45:07,722 Processing request of type ListPromptsRequest
+2025-11-05 19:45:07,724 -------- NEW CONVERSATION --------
+2025-11-05 19:45:35,052 USER QUERY: can you find what bus lines are there in Firenze?

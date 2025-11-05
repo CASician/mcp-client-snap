@@ -49,6 +49,7 @@ class MCPClient:
         - start the server given the correct path
         - fetch primitives (tools, resources, prompts) 
         - show primitives to user
+        - Append SYSTEM MESSAGE and AVAIILABLE TOOLS to server.
         """
         # ========== START SERVER ==========   
         is_python = server_script_path.endswith('.py')
@@ -87,6 +88,7 @@ class MCPClient:
         except Exception:
             self.prompts = []
 
+        # ========== SYSTEM MESSAGE + TOOL DEFINITION ==========
         self.messages.append({"role": "system", "content": SYSTEM_MESSAGE + build_system_tools(self.tools)})
         # TODO ADD LOGIC FOR RESOURCES AND PROMPTS HERE?
 
@@ -164,7 +166,6 @@ class MCPClient:
         # ========== INITIAL LLM CALL ========== 
         raw_resp = self.lab_llm.chat_completion(
             messages=self.messages,
-            functions=functions,
             function_call="auto", # "auto" or "none". With "none", no function is called. 
         )
 
@@ -263,7 +264,7 @@ class MCPClient:
 
             except Exception as e:
                 print(f"\n Error: {str(e)}")
-                print(traceback.format_exc())
+                # print(traceback.format_exc())
 
     async def cleanup(self):
         await self.exit_stack.aclose()
