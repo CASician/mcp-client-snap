@@ -1,6 +1,5 @@
 import asyncio
 import json
-import os
 import sys
 from typing import Optional
 from contextlib import AsyncExitStack
@@ -119,7 +118,7 @@ class MCPClient:
                 "parameters": {"type": "object", "properties": {}}
             })
 
-        # Initial Groq call
+        # TODO for FELIX, have fun! 
         raw_resp = self.lab_llm.chat_completion(
             messages=self.messages,
             functions=functions,
@@ -178,6 +177,7 @@ class MCPClient:
                 "content": str(result_content) + f"Show these results in natural language. State that nothing has been retrieved if that is the case."
             })
 
+            # TODO for FELIX, have fun again ehehe
             followup = self.lab_llm.chat_completion(
                 messages=self.messages,
                 function_call="none",
