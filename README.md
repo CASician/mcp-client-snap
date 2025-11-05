@@ -56,17 +56,22 @@ PROMPTS: [...]
 
 If you have the server folder and the client folder at the same level:
 ```bash
+cd mcp-client-snap
 python client.py ../mcp-server-snap/server.py
 ```
 Adapt the `server.py` path to your dir structure. 
 
-If you receive errors saying that the server is not running:
-1. Open a new terminal
-2. Go to server directory and turn it on with:
+>[!TIP]
+> If you receive errors saying that the server is not running:
+> 1. Open a new terminal
+> 2. Go to server directory and turn it on with: 
+> 
+> ```bash
+> python server.py
+> ```
+> 
+> 3. Go back to the original terminal and run the commands above again. 
 
-```
-python server.py
-```
 
 If successful, you’ll see the token-handling and an output like:
 
