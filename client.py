@@ -246,14 +246,14 @@ class MCPClient:
 
     async def chat_loop(self):
         """
-        Run an interactive chat loop. Type 'quit' to exit. The user will have a chat-like cli interface. You can type the query when ">>>Query:" is shown. 
+        Run an interactive chat loop. Type 'quit' to exit. The user will have a chat-like cli interface. You can type the query when ">>> Query:" is shown. 
         """
         print(f"\n{RED}MCP Client Started!{NC}")
         print("Type your queries or 'quit' to exit.")
 
         while True:
             try:
-                query = input(f"\n {GREEN}>>>Query: {NC}").strip()
+                query = input(f"\n {GREEN}>>> Query: {NC}").strip()
 
                 if query.lower() == 'quit':
                     break
