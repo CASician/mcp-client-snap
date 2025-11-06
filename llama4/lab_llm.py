@@ -104,7 +104,7 @@ class LabLLM:
         body = {
             "access_token": self.access_token,
             "endpoint": self.endpoint,
-            "params": {"prompt": messages}
+            "params": {"prompt": str(messages)}
         }
 
         # ========== INVOKE LLM COMPLETION ==========  
@@ -171,14 +171,14 @@ class LabLLM:
 
             # 3. TODO Check for combined answer (Text + JSON + Text) and reconsider order. 
                 
-            # ========== BUILD JSON-FUNCTION_CALL OPENAI STYLE ========== 
-            if parsed_function_call:
-                message = {
-                    "role": "assistant",
-                    "content": None,
-                    "function_call": parsed_function_call
-                }
-            
+        # ========== BUILD JSON-FUNCTION_CALL OPENAI STYLE ========== 
+        if parsed_function_call:
+            message = {
+                "role": "assistant",
+                "content": None,
+                "function_call": parsed_function_call
+            }
+        
             # Log the text reasoning if found
             if reasoning_text:
                 logger.info("MODEL REASONING: %s", reasoning_text)

@@ -1,13 +1,17 @@
+import subprocess
+import os
 import asyncio
 import json
 import sys
 from typing import Optional
 from contextlib import AsyncExitStack
 import logging
+import traceback
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from llama4.lab_llm import LabLLM 
+from snap4_prompts import Snap4Prompts
 from tool_schema_builder import build_system_tools
 
 # ========== LOGGING TO BE FOUND IN /logs/ ==========
@@ -25,6 +29,34 @@ GREEN = '\033[92m'
 BLUE = '\033[94m'
 NC = '\033[0m'
 
+def print_centered(text_to_center_or_fstring):
+    """
+    Esegue lo script Bash utility.sh per centrare il testo.
+    Accetta qualsiasi stringa, incluse quelle costruite con f-string.
+    """
+    
+    # 1. (Il passaggio cruciale) Valuta la stringa in Python.
+    # Se 'text_to_center_or_fstring' è una f-stringa come 
+    # f"Il mio server {server_name}", qui viene trasformata in 
+    # una stringa semplice, ad esempio: "Il mio server MCP-1".
+    final_text = str(text_to_center_or_fstring) 
+    
+    script_path = os.path.join(os.path.dirname(__file__), 'utility.sh')
+    
+    command = [
+        "bash",       
+        script_path,  
+        final_text  # Passiamo la stringa *già* risolta
+    ]
+    
+    try:
+        # Nota: usiamo 'text=True' per gestire meglio le stringhe di testo
+        subprocess.run(command, check=True, capture_output=False, text=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Errore nell'esecuzione dello script Bash: {e}")
+    except FileNotFoundError:
+         print(f"Errore: File '{script_path}' non trovato.")
+
 # ========== Load the system message ========== 
 with open("system_message.txt", "r", encoding="utf-8") as f:
     SYSTEM_MESSAGE = f.read()
@@ -39,6 +71,7 @@ class MCPClient:
         """ 
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
+        self.choose_prompt = Snap4Prompts()
         #self.openai = AsyncGroq(base_url="https://api.groq.com/")
         self.lab_llm = LabLLM()
         self.messages = []
@@ -90,7 +123,7 @@ class MCPClient:
 
         # ========== SYSTEM MESSAGE + TOOL DEFINITION ==========
         self.messages.append({"role": "system", "content": SYSTEM_MESSAGE + build_system_tools(self.tools, "TOOL") + build_system_tools(self.resources, "RESOURCE") })
-        print(self.messages)
+        # print(self.messages)
         # TODO ADD LOGIC FOR RESOURCES AND PROMPTS HERE?
 
         # ========== BASH LOGS ==========   
@@ -249,8 +282,11 @@ class MCPClient:
         """
         Run an interactive chat loop. Type 'quit' to exit. The user will have a chat-like cli interface. You can type the query when ">>> Query:" is shown. 
         """
-        print(f"\n{RED}MCP Client Started!{NC}")
-        print("Type your queries or 'quit' to exit.")
+        print()
+        print_centered(f"{RED}MCP Client Started!{NC}")
+        print_centered("Type your queries or 'quit' to exit.")
+        print_centered("Type 'prompt' to select a pre-written prompt.") 
+        valid_options = ['prompts', 'prompt', 'prt', 'prp', 'pro', 'proptms', 'promt', 'promp']
 
         while True:
             try:
@@ -258,12 +294,21 @@ class MCPClient:
 
                 if query.lower() == 'quit':
                     break
-
-                response = await self.process_query(query)
-                print("\n" + response)
+                if query.lower() in valid_options:
+                    chosen_prompt, user_args  = self.choose_prompt.start(self.prompts)
+                    if chosen_prompt == None:
+                        continue 
+                    res = await self.session.get_prompt(f"{chosen_prompt.name}", arguments=user_args)
+                    query = res.messages[0].content.text
+                    print(f"\n {GREEN}>>> Query: {NC}" + query) 
+                    response = await self.process_query(query)
+                    print("\n" + response)
+                else:
+                    response = await self.process_query(query)
+                    print("\n" + response)
 
             except Exception as e:
-                print(f"\n Error: {str(e)}")
+                print(f"\n Error: {str(e)} + {traceback.format_exc()}")
                 # print(traceback.format_exc())
 
     async def cleanup(self):
