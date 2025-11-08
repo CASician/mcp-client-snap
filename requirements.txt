@@ -1,5 +1,2 @@
 mcp
-groq
-dotenv
 requests
-logging

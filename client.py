@@ -7,13 +7,18 @@ from typing import Optional
 from contextlib import AsyncExitStack
 import logging
 import traceback
+from pathlib import Path
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from llama4.lab_llm import LabLLM 
 from snap4_prompts import Snap4Prompts
 from tool_schema_builder import build_system_tools
 
+# Path for llama4. TBR
+current_dir = Path(__file__).parent.absolute()
+home_dir = current_dir.parent
+sys.path.insert(0, str(home_dir))
+from llama4.lab_llm import LabLLM 
 # ========== LOGGING TO BE FOUND IN /logs/ ==========
 logging.basicConfig(
     filename="logs/llm_output.log",

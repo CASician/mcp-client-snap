@@ -1,5 +1,0 @@
-{
-    "clearml_ondemand_api_base_url": "https://www.snap4city.org/apis/llama4-inference",
-    "clearml_llm_endpoint": "llama4-inference",
-    "prompt_string": "What are Transformers in Natural Language Processing? Answer briefly."
-}
